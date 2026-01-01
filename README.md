@@ -140,6 +140,10 @@ The server implements the MCP protocol over HTTP. Connect to it using an MCP cli
 
 ⚠️ **WARNING**: This plugin allows arbitrary JavaScript execution in Discord's context. Only use this plugin if you trust the MCP clients connecting to it. Do not expose the server to untrusted networks.
 
+## AI Disclaimer
+
+This plugin was developed with assistance from **Cursor.AI** (Cursor's AI coding assistant). The AI was used to help with code generation, debugging, documentation, and implementation. While AI assistance was utilized, all code and features were reviewed and tested to ensure quality and functionality.
+
 ## License
 
-GPL-3.0-or-later
+Unlicense

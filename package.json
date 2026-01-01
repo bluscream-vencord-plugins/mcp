@@ -1,0 +1,33 @@
+{
+    "name": "blu-mcp",
+    "version": "1.0.0",
+    "description": "MCP server for inspecting Discord and running JavaScript",
+    "main": "index.tsx",
+    "scripts": {
+        "build": "echo 'No build step required for Vencord plugins'",
+        "test": "echo 'No tests specified'",
+        "lint": "echo 'Linting would go here'"
+    },
+    "keywords": [
+        "vencord",
+        "discord",
+        "mcp",
+        "model-context-protocol",
+        "inspection",
+        "debugging",
+        "plugin",
+        "equicord"
+    ],
+    "author": {
+        "name": "Bluscream",
+        "url": "https://github.com/Bluscream"
+    },
+    "license": "GPL-3.0-or-later",
+    "vencord": {
+        "plugin": true,
+        "desktop": true
+    },
+    "engines": {
+        "node": ">=16.0.0"
+    }
+}

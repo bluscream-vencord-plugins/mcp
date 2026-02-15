@@ -1,7 +1,7 @@
 {
-    "name": "blu-mcp",
+    "name": "mcp",
     "version": "1.0.0",
-    "description": "MCP server for inspecting Discord and running JavaScript",
+    "description": "MCP Server",
     "main": "index.tsx",
     "scripts": {
         "build": "echo 'No build step required for Vencord plugins'",

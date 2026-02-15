@@ -14,7 +14,9 @@ import { findByPropsLazy, findStoreLazy } from "@webpack";
 
 import { getNative } from "./nativeUtils";
 
-const logger = new Logger("DiscordMCP", "#5865F2");
+const pluginId = "mcp";
+const pluginName = "MCP Server";
+const logger = new Logger(pluginName, "#5865F2");
 
 // Helper function to generate XPath for an element
 function getXPath(element: Element): string {
@@ -352,7 +354,7 @@ async function handleToolCall(toolName: string, args: any): Promise<any> {
 }
 
 export default definePlugin({
-    name: "MCP Server",
+    name: pluginName,
     description: "MCP server for inspecting Discord and running JavaScript",
     authors: [{ name: "Bluscream", id: 467777925790564352n }, { name: "Cursor.AI", id: 0n }],
     settings,

@@ -1,11 +1,11 @@
-// Authors: Bluscream, Cursor.AI
-// Created at 2026-01-01 05:23:18
-/*
- * Vencord, a Discord client mod
- * Copyright (c) 2024 Vendicated and contributors
- * SPDX-License-Identifier: GPL-3.0-or-later
- */
+export const pluginInfo = {
+    id: "mcp",
+    name: "MCP Server",
+    description: "MCP server for inspecting Discord and running JavaScript",
+    color: "#5865F2"
+};
 
+// Created at 2026-01-01 05:23:18
 import { definePluginSettings } from "@api/Settings";
 import { Devs } from "@utils/constants";
 import { Logger } from "@utils/Logger";
@@ -14,9 +14,7 @@ import { findByPropsLazy, findStoreLazy } from "@webpack";
 
 import { getNative } from "./nativeUtils";
 
-const pluginId = "mcp";
-const pluginName = "MCP Server";
-const logger = new Logger(pluginName, "#5865F2");
+const logger = new Logger(pluginInfo.name, pluginInfo.color);
 
 // Helper function to generate XPath for an element
 function getXPath(element: Element): string {
@@ -354,7 +352,7 @@ async function handleToolCall(toolName: string, args: any): Promise<any> {
 }
 
 export default definePlugin({
-    name: pluginName,
+    name: "MCP Server",
     description: "MCP server for inspecting Discord and running JavaScript",
     authors: [{ name: "Bluscream", id: 467777925790564352n }, { name: "Cursor.AI", id: 0n }],
     settings,

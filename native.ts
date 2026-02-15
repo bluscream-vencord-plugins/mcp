@@ -1,11 +1,4 @@
-// Authors: Bluscream, Cursor.AI
 // Created at 2026-01-01 05:24:02
-/*
- * Vencord, a Discord client mod
- * Copyright (c) 2024 Vendicated and contributors
- * SPDX-License-Identifier: GPL-3.0-or-later
- */
-
 import { createServer, IncomingMessage, Server, ServerResponse } from "http";
 import { BrowserWindow, IpcMainInvokeEvent, ipcMain } from "electron";
 

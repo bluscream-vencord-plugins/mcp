@@ -1,29 +1,37 @@
+//// Plugin originally written for Equicord at 2026-02-16 by https://github.com/Bluscream, https://antigravity.google
+// region Imports
+import definePlugin from "@utils/types";
+import { Logger } from "@utils/Logger";
+import { findStoreLazy } from "@webpack";
+
+import { settings } from "./settings";
+import { getNative } from "./nativeUtils";
+// endregion Imports
+
+// region PluginInfo
 export const pluginInfo = {
     id: "mcp",
-    name: "MCP Server",
+    name: "McpServer",
     description: "MCP server for inspecting Discord and running JavaScript",
-    color: "#5865F2"
+    color: "#5865F2",
+    authors: [
+        { name: "Bluscream", id: 467777925790564352n },
+        { name: "Assistant", id: 0n }
+    ],
 };
+// endregion PluginInfo
 
-// Created at 2026-01-01 05:23:18
-import { definePluginSettings } from "@api/Settings";
-import { Devs } from "@utils/constants";
-import { Logger } from "@utils/Logger";
-import definePlugin, { OptionType } from "@utils/types";
-import { findByPropsLazy, findStoreLazy } from "@webpack";
+// region Variables
+const logger = new Logger(pluginInfo.id, pluginInfo.color);
+// endregion Variables
 
-import { getNative } from "./nativeUtils";
-
-const logger = new Logger(pluginInfo.name, pluginInfo.color);
-
-// Helper function to generate XPath for an element
+// region Utils
 function getXPath(element: Element): string {
     if (!element || element.nodeType !== Node.ELEMENT_NODE) {
         return "";
     }
 
     if (element.id) {
-        // If element has an ID, use it for XPath (much faster)
         return `//*[@id="${element.id}"]`;
     }
 
@@ -49,23 +57,18 @@ function getXPath(element: Element): string {
     return parts.length ? `/${parts.join("/")}` : "";
 }
 
-// Helper function to get element metadata
 function inspectElement(element: Element | null): any {
-    if (!element) {
-        return null;
-    }
+    if (!element) return null;
 
     const rect = element.getBoundingClientRect();
     const computedStyle = window.getComputedStyle(element);
     const attributes: Record<string, string> = {};
 
-    // Get all attributes
     for (let i = 0; i < element.attributes.length; i++) {
         const attr = element.attributes[i];
         attributes[attr.name] = attr.value;
     }
 
-    // Get parent info
     const parent = element.parentElement;
     const parentInfo = parent ? {
         tagName: parent.tagName.toLowerCase(),
@@ -74,7 +77,6 @@ function inspectElement(element: Element | null): any {
         hasParent: true
     } : { hasParent: false };
 
-    // Get children info
     const children = element.children;
     const childElements: Array<{ tagName: string; id: string | null; className: string | null; }> = [];
     for (let i = 0; i < Math.min(children.length, 50); i++) {
@@ -91,18 +93,12 @@ function inspectElement(element: Element | null): any {
         xpath: getXPath(element),
         id: element.id || null,
         className: element.className || null,
-        textContent: element.textContent?.substring(0, 200) || null, // Limit text content
-        innerHTML: element.innerHTML.substring(0, 500) || null, // Limit HTML content
+        textContent: element.textContent?.substring(0, 200) || null,
+        innerHTML: element.innerHTML.substring(0, 500) || null,
         attributes,
         boundingRect: {
-            x: rect.x,
-            y: rect.y,
-            width: rect.width,
-            height: rect.height,
-            top: rect.top,
-            left: rect.left,
-            bottom: rect.bottom,
-            right: rect.right
+            x: rect.x, y: rect.y, width: rect.width, height: rect.height,
+            top: rect.top, left: rect.left, bottom: rect.bottom, right: rect.right
         },
         computedStyles: {
             display: computedStyle.display,
@@ -143,19 +139,6 @@ function inspectElement(element: Element | null): any {
     };
 }
 
-const settings = definePluginSettings({
-    port: {
-        type: OptionType.NUMBER,
-        description: "MCP server port",
-        default: 8787
-    },
-    enabled: {
-        type: OptionType.BOOLEAN,
-        description: "Enable MCP server",
-        default: true
-    }
-});
-
 async function handleToolCall(toolName: string, args: any): Promise<any> {
     try {
         switch (toolName) {
@@ -164,9 +147,6 @@ async function handleToolCall(toolName: string, args: any): Promise<any> {
                 if (!code || typeof code !== "string") {
                     throw new Error("code parameter is required and must be a string");
                 }
-
-                // Execute code in the Discord context
-                // Using Function constructor to avoid eslint issues
                 const AsyncFunction = (async function () { }).constructor as typeof Function;
                 const func = new AsyncFunction(code);
                 const result = await func();
@@ -178,16 +158,11 @@ async function handleToolCall(toolName: string, args: any): Promise<any> {
                 if (!storeName || typeof storeName !== "string") {
                     throw new Error("storeName parameter is required and must be a string");
                 }
-
                 try {
-                    const store = findStoreLazy(storeName);
-                    // Return store state in a serializable format
-                    // Note: We can't serialize the entire store object, so we return a summary
+                    findStoreLazy(storeName);
                     return {
                         name: storeName,
                         available: true,
-                        // Return store's public properties if possible
-                        // Most stores don't expose a clean way to get all state
                         note: "Use get_store_method to call specific methods on the store"
                     };
                 } catch (error) {
@@ -197,122 +172,18 @@ async function handleToolCall(toolName: string, args: any): Promise<any> {
 
             case "get_store_method": {
                 const { storeName, methodName, args: methodArgs = [] } = args;
-                if (!storeName || typeof storeName !== "string") {
-                    throw new Error("storeName parameter is required");
+                if (!storeName || typeof storeName !== "string" || !methodName || typeof methodName !== "string") {
+                    throw new Error("storeName and methodName parameters are required");
                 }
-                if (!methodName || typeof methodName !== "string") {
-                    throw new Error("methodName parameter is required");
-                }
-
                 try {
                     const store = findStoreLazy(storeName);
                     if (typeof store[methodName] !== "function") {
                         throw new Error(`Method '${methodName}' not found on store '${storeName}'`);
                     }
-
                     const result = store[methodName](...methodArgs);
-                    // If it's a promise, await it
                     return result instanceof Promise ? await result : result;
                 } catch (error: any) {
                     throw new Error(`Error calling ${storeName}.${methodName}: ${error.message}`);
-                }
-            }
-
-            case "find_webpack_module": {
-                const { props, code } = args;
-                if (!props && !code) {
-                    throw new Error("Either props or code parameter is required");
-                }
-
-                try {
-                    if (props && Array.isArray(props)) {
-                        const module = findByPropsLazy(...props);
-                        return {
-                            found: true,
-                            type: "props",
-                            props,
-                            note: "Module found. Use evaluate_javascript to access it."
-                        };
-                    } else if (code && typeof code === "string") {
-                        // For code search, we'd need findByCodeLazy, but that's more complex
-                        // For now, return a note
-                        return {
-                            found: false,
-                            type: "code",
-                            note: "Code-based search requires more complex implementation. Use props search instead."
-                        };
-                    }
-                } catch (error) {
-                    return {
-                        found: false,
-                        error: String(error)
-                    };
-                }
-                break;
-            }
-
-            case "find_variable": {
-                const { name, maxDepth = 5 } = args;
-                if (!name || typeof name !== "string") {
-                    throw new Error("name parameter is required and must be a string");
-                }
-
-                const searchTerm = name.toLowerCase();
-                const matches: Array<{ path: string; value: any; }> = [];
-                const visited = new WeakSet();
-                const maxDepthNum = typeof maxDepth === "number" ? maxDepth : 5;
-
-                function searchRecursive(obj: any, path: string, depth: number) {
-                    if (depth > maxDepthNum) return;
-                    if (obj === null || obj === undefined) return;
-                    if (typeof obj === "function") return;
-
-                    // Avoid circular references
-                    if (typeof obj === "object") {
-                        if (visited.has(obj)) return;
-                        visited.add(obj);
-                    }
-
-                    try {
-                        // Search in object properties
-                        if (typeof obj === "object") {
-                            for (const key in obj) {
-                                try {
-                                    // Check if property name matches (case-insensitive)
-                                    if (key.toLowerCase().includes(searchTerm)) {
-                                        matches.push({
-                                            path: path ? `${path}.${key}` : key,
-                                            value: obj[key]
-                                        });
-                                    }
-
-                                    // Recursively search nested properties
-                                    if (depth < maxDepthNum) {
-                                        const value = obj[key];
-                                        if (value !== null && value !== undefined && typeof value === "object") {
-                                            searchRecursive(value, path ? `${path}.${key}` : key, depth + 1);
-                                        }
-                                    }
-                                } catch (e) {
-                                    // Skip properties that can't be accessed
-                                }
-                            }
-                        }
-                    } catch (e) {
-                        // Skip if object can't be iterated
-                    }
-                }
-
-                try {
-                    searchRecursive(document, "document", 0);
-                    return {
-                        searchTerm: name,
-                        matches: matches.slice(0, 100), // Limit to first 100 matches
-                        totalMatches: matches.length,
-                        note: matches.length > 100 ? "Showing first 100 matches" : undefined
-                    };
-                } catch (error: any) {
-                    throw new Error(`Error searching document: ${error.message}`);
                 }
             }
 
@@ -321,22 +192,12 @@ async function handleToolCall(toolName: string, args: any): Promise<any> {
                 if (!selector || typeof selector !== "string") {
                     throw new Error("selector parameter is required and must be a string");
                 }
-
                 try {
                     const element = document.querySelector(selector);
                     if (!element) {
-                        return {
-                            found: false,
-                            selector,
-                            error: `No element found matching selector: ${selector}`
-                        };
+                        return { found: false, selector, error: `No element found matching selector: ${selector}` };
                     }
-
-                    return {
-                        found: true,
-                        selector,
-                        element: inspectElement(element)
-                    };
+                    return { found: true, selector, element: inspectElement(element) };
                 } catch (error: any) {
                     throw new Error(`Error inspecting element with selector '${selector}': ${error.message}`);
                 }
@@ -350,11 +211,13 @@ async function handleToolCall(toolName: string, args: any): Promise<any> {
         throw error;
     }
 }
+// endregion Utils
 
+// region Definition
 export default definePlugin({
-    name: "MCP Server",
-    description: "MCP server for inspecting Discord and running JavaScript",
-    authors: [{ name: "Bluscream", id: 467777925790564352n }, { name: "Cursor.AI", id: 0n }],
+    name: pluginInfo.name,
+    description: pluginInfo.description,
+    authors: pluginInfo.authors,
     settings,
 
     async start() {
@@ -363,7 +226,6 @@ export default definePlugin({
             return;
         }
 
-        // Expose tool handler on window for native module to call
         (window as any).__discordMCPHandleTool = async (toolName: string, args: any) => {
             try {
                 return { result: await handleToolCall(toolName, args), error: null };
@@ -382,14 +244,11 @@ export default definePlugin({
             logger.info(`MCP server started on http://127.0.0.1:${settings.store.port}`);
         } catch (error: any) {
             logger.error("Failed to start MCP server:", error);
-            logger.error("Error details:", error.message || error);
         }
     },
 
     async stop() {
-        // Clean up window function
         delete (window as any).__discordMCPHandleTool;
-
         try {
             const native = getNative();
             await native.stopServer();
@@ -399,3 +258,4 @@ export default definePlugin({
         }
     }
 });
+// endregion Definition

@@ -8,18 +8,8 @@ import { settings } from "./settings";
 import { getNative } from "./nativeUtils";
 // endregion Imports
 
-// region PluginInfo
-export const pluginInfo = {
-    id: "mcp",
-    name: "McpServer",
-    description: "MCP server for inspecting Discord and running JavaScript",
-    color: "#5865F2",
-    authors: [
-        { name: "Bluscream", id: 467777925790564352n },
-        { name: "Assistant", id: 0n }
-    ],
-};
-// endregion PluginInfo
+import { pluginInfo } from "./info";
+export { pluginInfo };
 
 // region Variables
 const logger = new Logger(pluginInfo.id, pluginInfo.color);
